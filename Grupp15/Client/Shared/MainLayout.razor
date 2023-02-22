@@ -1,0 +1,90 @@
+﻿@inherits LayoutComponentBase
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+<MudLayout>
+    <MudAppBar Elevation="3">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="ToggleSidebar" />
+        <TopMenu />
+        <AuthorizeView>
+            <Authorized>
+            </Authorized>
+            <NotAuthorized>
+                <MudSpacer />
+                <MudIconButton Icon="@Icons.Material.Filled.Login" Color="Color.Inherit" Edge="Edge.Start" OnClick="Login" />
+            </NotAuthorized>
+        </AuthorizeView>
+    </MudAppBar>
+    <MudDrawer @bind-Open="_sidebarOpen" Elevation="1">
+        <MudDrawerHeader>
+            <MudAvatar Color="Color.Transparent" Size="Size.Large" Image="https://media.istockphoto.com/photos/librarian-picture-id184099731" />
+            <MudText Typo="Typo.h5" Color="Color.Primary" Style="margin-top:10px; margin-left:15px;">Bibloteket</MudText>
+        </MudDrawerHeader>
+        <MudNavMenu>
+            <AuthorizeView>
+                <NotAuthorized>
+                    <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Filled.Home">Home</MudNavLink>
+                    <MudNavLink Href="/lectures" Icon="@Icons.Filled.CalendarToday">Lectures</MudNavLink>
+                    <MudNavLink Href="/Allproducts" Icon="@Icons.Filled.Inventory">Products</MudNavLink>
+                    <MudNavLink Href="/Login" Icon="@Icons.Filled.Login">Login</MudNavLink>
+                    <MudNavLink Href="/SignUp" Icon="@Icons.Filled.AppRegistration">SignUp</MudNavLink>
+                </NotAuthorized>
+                <Authorized>
+                    <MudNavGroup Title="Library" Icon="@Icons.Filled.DashboardCustomize" Expanded="true">
+                        <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Filled.Home">Home</MudNavLink>
+                        <MudNavLink Href="/lectures" Icon="@Icons.Filled.CalendarToday">Lectures</MudNavLink>
+                        <MudNavLink Href="/Allproducts" Icon="@Icons.Filled.Inventory">Products</MudNavLink>
+                        <MudNavLink Href="/Profile" Icon="@Icons.Filled.AccountBox">My account</MudNavLink>
+                        <MudNavLink @onclick="Logout" Icon="@Icons.Filled.Logout">Logout</MudNavLink>
+                    </MudNavGroup>
+                </Authorized>
+            </AuthorizeView>
+            <AuthorizeView Roles="@($"{LibraryRoles.Admin}, {LibraryRoles.Librarian}")">
+                <p></p>
+                <MudNavGroup Title="Librarian Settings" Icon="@Icons.Filled.ManageAccounts" Expanded="false">
+                    <MudNavLink Href="/Librarian" Icon="@Icons.Filled.ManageAccounts">Librarian Page</MudNavLink>
+                    <MudNavLink Href="/loanedproducts" Icon="@Icons.Filled.ManageAccounts">Loaned Products</MudNavLink>
+                </MudNavGroup>
+            </AuthorizeView>
+            <AuthorizeView Roles="Admin">
+                <p></p>
+                <MudNavLink Href="/adminpage" Icon="@Icons.Filled.ManageAccounts">Admin Settings</MudNavLink>
+            </AuthorizeView>
+        </MudNavMenu>
+    </MudDrawer>
+    <MudMainContent Class="pt-16 px-16">
+        <MudContainer Class="mt-6">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    private bool _sidebarOpen = true;
+    private void ToggleSidebar() => _sidebarOpen = !_sidebarOpen;
+    private void Login()
+    {
+        NavigationManager.NavigateTo("/Login");
+    }
+
+    private async void Logout()
+    {
+        bool confimred = await JsRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to logout?");
+        if (confimred)
+        {
+            await LocalStorage.RemoveItemAsync("token");
+            await AuthStateProvider.GetAuthenticationStateAsync();
+            NavigationManager.NavigateTo("/");
+        }
+        else
+        {
+            NavigationManager.NavigateTo("/");
+        }
+
+    }
+}

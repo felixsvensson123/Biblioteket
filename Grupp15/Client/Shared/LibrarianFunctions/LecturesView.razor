@@ -1,0 +1,56 @@
+﻿@inject IAccountManager AccountManager
+@inject ILectureManager LectureManager
+@inject NavigationManager NavigationManager
+<MudTable Items="@Loaned" Sortable="true" Filter="new Func<LectureModel,bool>(FilterT)">
+	<ToolBarContent>
+		<MudText Typo="Typo.h6">All lectures</MudText>
+		<MudSpacer />
+	</ToolBarContent>
+	<HeaderContent>
+		<MudTh>Name</MudTh>
+		<MudTh>Description</MudTh>
+		<MudTh>Subject</MudTh>
+		<MudTh>MaxStudent Count</MudTh>
+		<MudTh>Attending Count</MudTh>
+		<MudTh></MudTh>
+		<MudTh></MudTh>
+	</HeaderContent>
+	<RowTemplate>
+        <MudTd DataLabel="Name">@context.LecturerName</MudTd>
+        <MudTd DataLabel="Type">@context.Description</MudTd>
+        <MudTd DataLabel="Count">@context.Subject</MudTd>
+        <MudTd DataLabel="Count">@context.MaxStudentCount</MudTd>
+        <MudTd DataLabel="Count">@context.AttendingCount</MudTd>
+		<MudTd><MudButton ButtonType="ButtonType.Button" Variant="Variant.Outlined" Color="Color.Dark" @onclick="(() => LectureInfo(context.Id))">Info</MudButton></MudTd>
+		<MudTd><MudButton ButtonType="ButtonType.Button" Variant="Variant.Outlined" Color="Color.Dark" @onclick="(() => EditLecture(context.Id))">Edit</MudButton></MudTd>
+	</RowTemplate>
+	<PagerContent>
+		<MudTablePager />
+	</PagerContent>
+</MudTable>
+@code {
+    public List<LectureModel>? Loaned = new();
+    private string _search = "";
+    protected override async Task OnInitializedAsync()
+    {
+        Loaned = await LectureManager.GetAll();
+    }
+    private bool FilterT(LectureModel loaned) => FilterThread(loaned, _search);
+
+	private bool FilterThread(LectureModel loaned, string _search)
+	{
+		if (string.IsNullOrWhiteSpace(_search))
+			return true;
+		if (loaned.LecturerName.Contains(_search, StringComparison.OrdinalIgnoreCase))
+			return true;
+		return false;
+	}
+	private void LectureInfo(int id)
+    {
+        NavigationManager.NavigateTo($"LecturesInfo/{id}");
+    }
+	private async Task EditLecture(int id)
+    {
+        NavigationManager.NavigateTo($"EditLecture/{id}");
+    }
+}

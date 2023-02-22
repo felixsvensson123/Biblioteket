@@ -1,0 +1,197 @@
+﻿@page "/Product/{Id:int}"
+@using Grupp15.Shared
+@inject IBookManager BookManager
+@inject IEBookManager EBookManager
+@inject IMovieManager MovieManager
+@inject IProductManager ProductManager
+@inject IBorrowingManager BorrowingManager
+@inject NavigationManager NavigationManager
+
+@if (HasPageLoaded)
+{
+    @if (product != null)
+    {
+        <MudSimpleTable>
+            @if (product.ModelType == nameof(MovieModel))
+            {
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Director</th>
+                        <th>Genre</th>
+                        <th>Stock</th>
+                        <th>Loan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>@Movie.Name</td>
+                        <td>@Movie.Director</td>
+                        <td>@Movie.Genre</td>
+                        <td>@Movie.Count</td>
+                        @if (LoanStatus == true)
+                        {
+                            <td>
+                                <AuthorizeView>
+                                    <Authorized>
+                                        <MudButton ButtonType=ButtonType.Button Variant="Variant.Filled" @onclick="@(() => LoanProduct(Id))">Loan</MudButton>
+                                    </Authorized>
+                                    <NotAuthorized>
+                                        <MudButton ButtonType=ButtonType.Button Variant="Variant.Filled" Disabled="true">Loan</MudButton>
+                                    </NotAuthorized>
+                                </AuthorizeView>
+                            </td>
+                        }
+                        else if (LoanStatus == false)
+                        {
+                            <td>Out of stock</td>
+                        }
+                    </tr>
+                </tbody>
+            }
+            else if (product.ModelType == nameof(BookModel))
+            {
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Author</th>
+                        <th>Pages</th>
+                        <th>Release Date</th>
+                        <th>Stock</th>
+                        <th>Loan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>@Book.Name</td>
+                        <td>@Book.Author</td>
+                        <td>@Book.Pages</td>
+                        <td>@Book.Created</td>
+                        <td>@Book.Count</td>
+                        @if (LoanStatus)
+                        {
+                            <td>
+                                <AuthorizeView>
+                                    <Authorized>
+                                        <MudButton ButtonType=ButtonType.Button Variant="Variant.Filled" @onclick="@(() => LoanProduct(Id))">Loan</MudButton>
+                                    </Authorized>
+                                    <NotAuthorized>
+                                        <MudButton ButtonType=ButtonType.Button Variant="Variant.Filled" Disabled="true">Loan</MudButton>
+                                    </NotAuthorized>
+                                </AuthorizeView>
+                            </td>
+                        }
+                        else if (LoanStatus == false)
+                        {
+                            <td>Out of stock</td>
+                        }
+                    </tr>
+                </tbody>
+            }
+            else if (product.ModelType == nameof(EBookModel))
+            {
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Author</th>
+                        <th>Pages</th>
+                        <th>Release Date</th>
+                        <th>Loan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>@EBook.Name</td>
+                        <td>@EBook.EAuthor</td>
+                        <td>@EBook.EPages</td>
+                        <td>@EBook.Created</td>
+                        @if (LoanStatus)
+                        {
+                            <td>
+                                <AuthorizeView>
+                                    <Authorized>
+                                        <MudButton ButtonType=ButtonType.Button Variant="Variant.Filled" @onclick="@(() => LoanProduct(Id))">Loan</MudButton>
+                                    </Authorized>
+                                    <NotAuthorized>
+                                        <MudButton ButtonType=ButtonType.Button Variant="Variant.Filled" Disabled="true">Loan</MudButton>
+                                    </NotAuthorized>
+                                </AuthorizeView>
+                            </td>
+                        }
+                        else if (LoanStatus == false)
+                        {
+                            <td>Out of stock</td>
+                        }
+                    </tr>
+                </tbody>
+            }
+        </MudSimpleTable>
+        <MudPaper Class="py-16 d-flex flex-1" Style="@($"background:{Theme.Palette.BackgroundGrey};")">
+            <MudText Style="white-space: pre-wrap;">@product.Description</MudText>
+        </MudPaper>
+    }
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private ProductBase? product { get; set; }
+    private MovieModel Movie { get; set; } = new();
+    private BookModel Book { get; set; } = new();
+    private EBookModel? EBook { get; set; } = new();
+
+    bool LoanStatus { get; set; } = false;
+    bool HasPageLoaded { get; set; } = false;
+
+    private MudTheme Theme = new MudTheme();
+
+    protected async override Task OnParametersSetAsync()
+    {
+        product = await ProductManager.GetProduct(Id);
+
+        if (product != null)
+        {
+            switch (product.ModelType)
+            {
+                case nameof(MovieModel):
+                    Movie = (MovieModel)product;
+                    break;
+                case nameof(BookModel):
+                    Book = (BookModel)product;
+                    break;
+                case nameof(EBookModel):
+                    EBook = (EBookModel)product;
+                    break;
+            }
+
+            if (product.Count > 0)
+            {
+                LoanStatus = true;
+            }
+            else if (product.Count == 0)
+            {
+                LoanStatus = false;
+            }
+
+            if(product.ModelType == nameof(EBookModel))
+            {
+                LoanStatus = true;    
+            }
+
+            HasPageLoaded = true;
+            StateHasChanged();
+        }
+    }
+    public async Task LoanProduct(int id)
+    {
+        var result = await BorrowingManager.Loan(id);
+
+        if (result)
+        {
+            NavigationManager.NavigateTo("/");
+        }
+
+        StateHasChanged();
+    }
+}

@@ -1,0 +1,59 @@
+﻿@page "/signup"
+@inject IAccountManager AccountManager
+@inject NavigationManager NavigationManager
+
+@if(!Authcheck)
+{
+<EditForm Model="user" OnValidSubmit="Register">
+	<DataAnnotationsValidator />
+	<MudCard Class="demo-form">
+		<MudCardContent>
+			<MudTextField Label="Full Name" @bind-Value="user.PersonName" For="@(() => user.PersonName)"/>
+			<MudTextField Label="Email" @bind-Value="user.Email" For="@(() => user.Email)" />
+			<MudTextField Label="Home Address" @bind-Value="user.Adress" For="@(() => user.Adress)"/>
+			<MudTextField Label="Password" HelperText="Choose a strong password" @bind-Value="user.Password" For="@(() => user.Password)" InputType="InputType.Password" />
+			<MudTextField Label="Password" HelperText="Repeat the password" @bind-Value="user.ConfirmPassword" For="@(() => user.ConfirmPassword)" InputType="InputType.Password" />
+		</MudCardContent>
+		<MudCardActions>
+			<MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" @onclick="Register" Class="demo-form-button">Register</MudButton>
+		</MudCardActions>
+	</MudCard>
+</EditForm>
+}
+else
+{
+<EditForm Model="user" OnValidSubmit="Register">
+	<DataAnnotationsValidator />
+	<MudCard Class="demo-form">
+		<MudCardContent>
+			<MudTextField Label="Full Name" @bind-Value="user.PersonName" For="@(() => user.PersonName)"/>
+			<MudTextField Label="Email" @bind-Value="user.Email" For="@(() => user.Email)" />
+			<MudTextField Label="Home Address" @bind-Value="user.Adress" For="@(() => user.Adress)"/>
+			<MudTextField Label="Password" HelperText="Choose a strong password" @bind-Value="user.Password" For="@(() => user.Password)" InputType="InputType.Password" />
+			<MudTextField Label="Password" HelperText="Repeat the password" @bind-Value="user.ConfirmPassword" For="@(() => user.ConfirmPassword)" InputType="InputType.Password" />
+		</MudCardContent>
+		<MudCardActions>
+			<MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" @onclick="Register" Class="demo-form-button">Register</MudButton>
+		</MudCardActions>
+	</MudCard>
+</EditForm>
+<h3 style="color: red;">Something went wrong! Try again.</h3>
+}
+
+@code {
+	public RegisterModel user = new RegisterModel();
+	private bool Authcheck;
+	private async Task Register()
+	{
+		string account = await AccountManager.CreateUser(user);
+		if(!string.IsNullOrEmpty(account))
+		{
+			Authcheck = false;
+			NavigationManager.NavigateTo("/login");
+		}
+		else if(account == null)
+		{
+			Authcheck = true;
+		}
+	}
+}

@@ -1,0 +1,42 @@
+﻿@page "/EmployeeRecords"
+@page "/EmployeeRecords/{id}"
+@inject IAccountManager AccountManager
+@inject NavigationManager NavigationManager
+<p>Name: <em>@Emp?.PersonName</em></p>
+<p>Email: <em>@Emp?.Email</em></p>
+<p>Adress: <em>@Emp?.Adress</em></p>
+
+@if (Role)
+{
+    <p>You are the store Owner</p>
+}
+else
+{
+    <MudButton ButtonType=ButtonType.Button Variant="Variant.Filled"  @onclick="HirePerson" Class="demo-form-button">Hire New Librarian</MudButton>
+    <MudButton ButtonType=ButtonType.Button Variant="Variant.Filled"  @onclick="FirePerson" Class="demo-form-button">Fire Librarian</MudButton>
+}
+
+@code {
+    [Parameter]
+    public string Id { get; set; } = "";
+    public ApplicationUser? Emp { get; set; }
+    private bool Role;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Emp = await AccountManager.GetUser(Id);
+        Role = await AccountManager.CheckUserRole(Id);
+    }
+
+    private async Task HirePerson()
+    {
+        await AccountManager.HireLibrarian(Emp!.UserName, Id);
+        NavigationManager.NavigateTo("/AdminPage");
+    }
+
+    private async Task FirePerson()
+    {
+        await AccountManager.FireLibrarian(Emp!.UserName, Id);
+        NavigationManager.NavigateTo("/AdminPage");
+    }
+}

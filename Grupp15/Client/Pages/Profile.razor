@@ -1,0 +1,148 @@
+﻿@page "/profile"
+@inject IBorrowingManager BorrowingManager
+@inject ILectureManager LectureManager
+@inject IAccountManager AccountManager
+
+<AuthorizeView>
+    <Authorized>
+        <h1>User Details</h1>
+        <MudCard>
+            <MudCardContent>
+                <MudText>Name: @User?.PersonName</MudText>
+                <MudText>Adress: @User?.Adress</MudText>
+                <MudText>Email: @User?.Email</MudText>
+            </MudCardContent>
+        </MudCard>
+        <br />
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-3">
+            <MudTabPanel Text="View Loaned">
+                @if (Borrowing.Count > 0)
+                {
+                    <MudSimpleTable>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Return Date</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Borrowing != null)
+                            {
+                                @foreach (var borrow in Borrowing)
+                                {
+                                    <tr>
+                                        <td>@borrow.Product?.Name</td>
+                                        <td>@borrow.Product?.Type</td>
+                                        @{
+                                            var delta = borrow.ReturnDate - DateTime.Now;
+                                            var days = delta.Days;
+                                            var hours = delta.Hours;
+                                        }
+
+                                        @if (days > 0)
+                                        {
+                                            <td>In @days days and @hours hours (@borrow.ReturnDate.ToShortDateString())</td>
+                                        }
+                                        else if (hours > 0)
+                                        {
+                                            <td>In @hours hours (@borrow.ReturnDate.ToShortDateString())</td>
+                                        }
+                                        else
+                                        {
+                                            <td>Past return date(@borrow.ReturnDate.ToShortDateString())</td>
+                                        }
+                                        <td>
+                                            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Outlined" Color="Color.Dark" @onclick="(() => ReturnProduct(borrow.ProductId))">Return</MudButton>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </MudSimpleTable>
+                }
+                else
+                {
+                    <p>No products are currently loaned by you.</p>
+                }
+            </MudTabPanel>
+            <MudTabPanel Text="View Lectures">
+                @if (Attending.Count > 0)
+                {
+                    <MudSimpleTable>
+                        <thead>
+                            <tr>
+                                <th>Lecture Subject</th>
+                                <th>Lecturers Name</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var attend in Attending)
+                            {
+                                @if (attend != null)
+                                {
+                                    @if (attend.Lecture != null)
+                                    {
+                                        <tr>
+                                            <td>@attend.Lecture.Subject</td>
+                                            <td>@attend.Lecture.LecturerName</td>
+
+                                            @if (attend.Lecture.StartDate > DateTime.Now)
+                                            {
+                                                <td>
+                                                    <MudButton ButtonType=ButtonType.Button Variant="Variant.Filled" @onclick="(() => Unregister(attend.LectureId))">Unregister</MudButton>
+                                                </td>
+                                            }
+                                            else
+                                            {
+                                                <td>Expired</td>
+                                            }
+                                        </tr>
+                                    }
+                                }
+                            }
+                        </tbody>
+                    </MudSimpleTable>
+                }
+                else
+                {
+                    <p>No lectures signed up to currently.</p>
+                }
+            </MudTabPanel>
+        </MudTabs>
+    </Authorized>
+    <NotAuthorized>
+        <p>Not logged in</p>
+    </NotAuthorized>
+</AuthorizeView>
+@code {
+    public ApplicationUser? User { get; set; }
+    public List<BorrowingModel> Borrowing { get; set; } = new();
+    public List<AttendModel> Attending { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        User = await AccountManager.GetCurrentUser();
+        Borrowing = await BorrowingManager.GetLoaned();
+        Attending = await LectureManager.GetAttending();
+    }
+
+    public async Task ReturnProduct(int id)
+    {
+        await BorrowingManager.Return(id);
+
+        Borrowing = await BorrowingManager.GetLoaned();
+    }
+
+    public async Task Unregister(int id)
+    {
+        var result = await LectureManager.Unregister(id);
+
+        if(result)
+        {
+            Attending.Remove(Attending.Find(x => x.LectureId == id)!);
+        }
+    }
+}

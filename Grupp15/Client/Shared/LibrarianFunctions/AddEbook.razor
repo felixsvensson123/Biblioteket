@@ -1,0 +1,81 @@
+﻿@inject IEBookManager EBookManager
+
+<InputFile OnChange=@LoadFile />
+
+@if (ebook != null)
+{
+    @if (posted == false)
+    {
+        <MudButton ButtonType="ButtonType.Button" @onclick="@PostFile"><MudIcon Icon="@Icons.Filled.UploadFile" Color="Color.Success" Title="Upload" /></MudButton>
+        <MudSimpleTable>
+            <thead>
+                <tr>
+                    <th>EBook Name</th>
+                    <th>EBook Author</th>
+                    <th>Number of Pages</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var model in ebook)
+                {
+                    @if (model != null)
+                    {
+
+                        <tr>
+                            <td>@model.Name</td>
+                            <td>@model.EAuthor</td>
+                            <td>@model.EPages</td>
+                        </tr>
+
+                    }
+                    else
+                    {
+                        <p>null</p>
+                    }
+                }
+            </tbody>
+        </MudSimpleTable>
+    }
+    else
+    {
+        <h3>Ebooks posted</h3>
+    }
+
+}
+
+
+@code {
+    private List<EBookModel>? ebook { get; set; }
+    private Stream? fileStream;
+
+    private string fileName = "";
+    private bool posted;
+
+    private async Task PostFile()
+    {
+        if (fileStream != null)
+        {
+            fileStream.Position = 0;
+
+            await EBookManager.BulkAdd(fileStream, fileName);
+
+            posted = true;
+        }
+    }
+
+
+    private async Task LoadFile(InputFileChangeEventArgs e)
+    {
+        byte[] buffer = new byte[e.File.Size];
+
+        await e.File.OpenReadStream().ReadAsync(buffer);
+
+        fileStream = new MemoryStream(buffer);
+
+        fileName = e.File.Name;
+
+        ebook = CSVHelper.FromStream<EBookModel>(fileStream)!;
+
+        posted = false;
+    }
+}

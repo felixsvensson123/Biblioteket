@@ -1,0 +1,38 @@
+﻿@inject ILectureManager LectureManager
+@inject NavigationManager NavigationManager
+<EditForm Model="lecture" OnValidSubmit="CreateLecture">
+    <DataAnnotationsValidator />
+    <MudCard Class="demo-form">
+        <MudCardContent>
+            <MudTextField Label="Lecturers Name" @bind-Value="lecture.LecturerName" For="@(() => lecture.LecturerName)" />
+            <MudTextField Label="Subject" @bind-Value="lecture.Subject" For="@(() => lecture.Subject)" />
+            <MudTextField Label="Description" @bind-Value="lecture.Description" For="@(() => lecture.Description)" />
+            <MudTextField Label="Length in minutes" @bind-Value="lecture.EstimatedLengthMins" For="@(() => lecture.EstimatedLengthMins)" />
+            <MudTextField Label="Start Date" @bind-Value="lecture.StartDate" For="@(() => lecture.StartDate)" InputType="InputType.Date" />
+            <MudTextField Label="Start Time (24h Format)" @bind-Value="StartTime" InputType="InputType.Time" />
+            <MudTextField Label="Max Seats" @bind-Value="lecture.MaxStudentCount" For="@(() => lecture.MaxStudentCount)" />
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="demo-form-button">Add Lecture</MudButton>
+        </MudCardActions>
+    </MudCard>
+</EditForm>
+@code {
+    private LectureModel lecture { get; set; } = new();
+    private TimeSpan StartTime { get; set; }
+
+    protected override void OnInitialized()
+    {
+        lecture.StartDate = DateTime.Now.Date;
+    }
+
+    private async Task CreateLecture()
+    {
+        lecture.StartDate = lecture.StartDate.Add(StartTime);
+
+        var result = await LectureManager.AddLecture(lecture);
+
+        if (result)
+            NavigationManager.NavigateTo("/Lectures");
+    }
+}

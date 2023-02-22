@@ -1,0 +1,87 @@
+﻿@page "/viewuser"
+@page "/viewuser/{id}"
+@inject IAccountManager AccountManager
+@inject IBorrowingManager BorrowingManager
+@inject ILectureManager LectureManager
+@inject NavigationManager NavigationManager
+<AuthorizeView>
+    <Authorized>
+        <h1> User Details</h1>
+        <MudCard>
+            <MudCardContent>
+                <MudText>Name: @User?.PersonName</MudText>
+                <MudText>Adress: @User?.Adress</MudText>
+                <MudText>Email: @User?.Email</MudText>
+            </MudCardContent>
+        </MudCard>
+        <br />
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-3">
+            <MudTabPanel Text="View Loaned">
+                <p>All products currently loaned to this user: @User?.PersonName</p>
+                <MudSimpleTable>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Date Borrowed</th>
+                            <th>Last Return Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var borrow in Borrowing)
+                        {
+                            <tr>
+                                <td>@borrow.Product?.Name</td>
+                                <td>@borrow.BorrowingDate</td>
+                                <td>@borrow.ReturnDate</td>
+                                <td>@borrow.Product?.Type</td>
+                            </tr>
+                        }
+                    </tbody>
+                </MudSimpleTable>
+            </MudTabPanel>
+            <MudTabPanel Text="View Lectures">
+                <p>All Courses this user have signed up for: @User?.PersonName</p>
+                <MudSimpleTable>
+                    <thead>
+                        <tr>
+                            <th>Lecture Subject</th>
+                            <th>Lecturers Name</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (LectureAttending != null)
+                        {
+                            @foreach (var attend in LectureAttending)
+                            {
+                                @if (attend != null)
+                                {
+                                    @if (attend.Lecture != null)
+                                    {
+                                        <tr>
+                                            <td>@attend.Lecture.Subject</td>
+                                            <td>@attend.Lecture.LecturerName</td>
+                                        </tr>
+                                    }
+                                }
+                            }
+                        }
+                    </tbody>
+                </MudSimpleTable>
+            </MudTabPanel>
+        </MudTabs>
+    </Authorized>
+</AuthorizeView>
+@code {
+    [Parameter]
+    public string Id { get; set; } = "";
+    public ApplicationUser? User { get; set; }
+    public List<BorrowingModel>? Borrowing = new();
+    public List<AttendModel>? LectureAttending = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        User = await AccountManager.GetUser(Id);
+        Borrowing = await BorrowingManager.GetLoaned(Id);
+        LectureAttending = await LectureManager.GetAttending(Id);
+    }
+}

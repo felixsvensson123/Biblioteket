@@ -1,0 +1,50 @@
+﻿@page "/adminpage"
+@inject NavigationManager NavigationManager
+@inject IAccountManager AccountManager
+<AuthorizeView>
+    <Authorized>
+        <MudSimpleTable>
+            <thead>
+                <tr>
+                    <th>Namn</th>
+                    <th>Email</th>
+                    <th>Adress</th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach(var view in users)
+                {
+                    <tr>
+                        <td>@view.PersonName</td>
+                        <td>@view.Email</td>
+                        <td>@view.Adress</td>
+                        <td>
+                             <MudButton ButtonType=ButtonType.Button Variant="Variant.Filled"  @onclick="(() => ViewPerson(view.Id))" Class="demo-form-button">View Person</MudButton>
+                        </td>
+                         <td>
+                             <MudButton ButtonType=ButtonType.Button Variant="Variant.Filled"  @onclick="(() => HirePerson(view.Id))" Class="demo-form-button">Employee Records</MudButton>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </MudSimpleTable>
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    public List<ApplicationUser>? users = new();
+    protected override async Task OnInitializedAsync()
+    {
+        users = await AccountManager.GetAllUsers();
+    }
+    void ViewPerson(string id)
+    {
+        NavigationManager.NavigateTo($"ViewUser/{id}");
+    }
+    void HirePerson(string id)
+    {
+        NavigationManager.NavigateTo($"EmployeeRecords/{id}");
+    }
+}

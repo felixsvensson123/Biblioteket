@@ -1,0 +1,79 @@
+﻿@page "/LecturesInfo/{id:int}"
+@inject ILectureManager LectureManager
+@inject NavigationManager NavigationManager
+
+@if (lecture != null)
+{
+    <MudSimpleTable>
+        <thead>
+            <tr>
+                <th>Lecturers Name</th>
+                <th>Subject</th>
+                <th>Description</th>
+                <th>Start Date</th>
+                <th>Max Seats</th>
+                <th>Seats Taken</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>@lecture.LecturerName</td>
+                <td>@lecture.Subject</td>
+                <td>@lecture.Description</td>
+                <td>@lecture.StartDate</td>
+                <td>@lecture.MaxStudentCount</td>
+                <td>@lecture.AttendingCount</td>
+            </tr>
+        </tbody>
+    </MudSimpleTable>
+    <br />
+    <h3>Attending Students</h3>
+    <br />
+    <MudSimpleTable>
+        <thead>
+            <tr>
+                <th>Student Name</th>
+                <th>Student Id</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (LectureAttending != null)
+            {
+                @foreach (var student in LectureAttending)
+                {
+                    <tr>
+                        <td>@student?.User?.PersonName</td>
+                        <td>@student?.User?.Id</td>
+                        <td>
+                            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Error" @onclick="(() => StudentRemove(lecture.Id,student.UserId))">Remove Student</MudButton>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </MudSimpleTable>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    public LectureModel? lecture { get; set; }
+    public List<AttendModel> LectureAttending = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        lecture = await LectureManager.GetById(Id);
+        LectureAttending = await LectureManager.GetAttending(Id);
+    }
+
+    private async Task StudentRemove(int lectureId, string studentId)
+    {
+        var result = await LectureManager.RemoveStudent(lectureId, studentId);
+
+        if (result)
+        {
+            LectureAttending.RemoveAll(x => x.UserId == studentId);
+        }
+    }
+}

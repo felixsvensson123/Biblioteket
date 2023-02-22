@@ -1,0 +1,46 @@
+@page "/Editlecture/{Id:int}"
+@inject ILectureManager LectureManager
+@inject NavigationManager NavigationManager
+@if (PageHasLoaded)
+{
+    <h3>Edit Lecture</h3>
+    <EditForm Model="Lecture" OnSubmit="LectureEdit">
+        <MudCard Class="demo-form">
+            <MudCardContent>
+                <MudTextField Label="Edit Teacher Name" @bind-Value="Lecture.LecturerName" For="@(() => Lecture.LecturerName)" />
+                <MudTextField Label="Edit Subject" @bind-Value="Lecture.Subject" For="@(() => Lecture.Subject)" />
+                <MudTextField Label="Edit Description" @bind-Value="Lecture.Description" For="@(() => Lecture.Description)" />
+                <MudTextField Label="Edit ETA" @bind-Value="Lecture.EstimatedLengthMins" For="@(() => Lecture.EstimatedLengthMins)" />
+                <MudTextField Label="Start Date" @bind-Value="Lecture.StartDate" For="@(() => Lecture.StartDate)" InputType="InputType.Date" />
+                <MudTextField Label="Start Time (24h Format)" @bind-Value="StartTime" InputType="InputType.Time" />
+                <MudTextField Label="Edit Maximum Students" @bind-Value="Lecture.MaxStudentCount" For="@(() => Lecture.MaxStudentCount)" />
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">Save</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </EditForm>
+}
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private LectureModel Lecture { get; set; } = new();
+    private TimeSpan StartTime { get; set; }
+
+    private bool PageHasLoaded { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Lecture = await LectureManager.GetById(Id) ?? new();
+        StartTime = Lecture.StartDate.TimeOfDay;
+
+        PageHasLoaded = true;
+    }
+
+    private async Task LectureEdit()
+    {
+        await LectureManager.EditLecture(Lecture, Id);
+        NavigationManager.NavigateTo("/Librarian");
+    }
+}

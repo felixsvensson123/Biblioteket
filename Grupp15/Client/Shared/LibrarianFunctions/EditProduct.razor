@@ -1,0 +1,198 @@
+﻿@page "/editproduct/{id:int}"
+@inject IProductManager ProductManager
+@inject IBookManager BookManager
+@inject IEBookManager EBookManager
+@inject IMovieManager MovieManager
+@inject NavigationManager NavigationManager
+<h3>EditProduct</h3>
+
+@if (Model != null)
+{
+    @switch (Model.ModelType)
+    {
+        case nameof(BookModel):
+            @if (Book == null)
+                break;
+            <MudSimpleTable>
+                <thead>
+                    <tr>
+                        <th>Book Name</th>
+                        <th>Book Author</th>
+                        <th>Instock</th>
+                        <th>Number of Pages</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>@Book.Name</td>
+                        <td>@Book.Author</td>
+                        <td>@Book.Count</td>
+                        <td>@Book.Pages</td>
+                        <td>@Book.Description</td>
+                    </tr>
+                </tbody>
+            </MudSimpleTable>
+            <EditForm Model="EditBook" OnSubmit="Update">
+                <MudCard Class="demo-form">
+                    <MudCardContent>
+                        <MudTextField Label="Author" @bind-Value="EditBook.Author" For="@(() => EditBook.Author)" />
+                        <MudTextField Label="Pages" @bind-Value="EditBook.Pages" For="@(() => EditBook.Pages)" />
+                        <MudTextField Label="Count" @bind-Value="EditBook.Count" For="@(() => EditBook.Count)" />
+                        <MudTextField Label="BookName" @bind-Value="EditBook.Name" For="@(() => EditBook.Name)" />
+                        <MudTextField Label="Description" @bind-Value="EditBook.Description" For="@(() => EditBook.Description)" />
+                    </MudCardContent>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Info">Update Book</MudButton>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Error" @onclick="Delete">Remove Book</MudButton>
+                </MudCard>
+            </EditForm>
+            break;
+        case nameof(MovieModel):
+            @if (Movie == null)
+                break;
+            <MudSimpleTable>
+                <thead>
+                    <tr>
+                        <th>Movie Name</th>
+                        <th>Movie Director</th>
+                        <th>Instock</th>
+                        <th>Movie Genre</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>@Movie.Name</td>
+                        <td>@Movie.Director</td>
+                        <td>@Movie.Count</td>
+                        <td>@Movie.Genre</td>
+                        <td>@Movie.Description</td>
+                    </tr>
+                </tbody>
+            </MudSimpleTable>
+            <EditForm Model="EditMovie" OnSubmit="Update">
+                <MudCard Class="demo-form">
+                    <MudCardContent>
+                        <MudTextField Label="Movie Director" @bind-Value="EditMovie.Director" For="@(() => EditMovie.Director)" />
+                        <MudTextField Label="Count" @bind-Value="EditMovie.Count" For="@(() => EditMovie.Count)" />
+                        <MudTextField Label="Genre" @bind-Value="EditMovie.Genre" For="@(() => EditMovie.Genre)" />
+                        <MudTextField Label="Name" @bind-Value="EditMovie.Name" For="@(() => EditMovie.Name)" />
+                        <MudTextField Label="Description" @bind-Value="EditMovie.Description" For="@(() => EditMovie.Description)" />
+                    </MudCardContent>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Info">Update Movie</MudButton>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Error" @onclick="Delete">Remove Movie</MudButton>
+                </MudCard>
+            </EditForm>
+            break;
+        case nameof(EBookModel):
+            @if (Ebook == null)
+                break;
+            <MudSimpleTable>
+                <thead>
+                    <tr>
+                        <th>EBook Name</th>
+                        <th>EBook Author</th>
+                        <th>Number of Pages</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>@Ebook.Name</td>
+                        <td>@Ebook.EAuthor</td>
+                        <td>@Ebook.EPages</td>
+                        <td>@Ebook.Description</td>
+                    </tr>
+                </tbody>
+            </MudSimpleTable>
+            <EditForm Model="EditEBook" OnSubmit="Update">
+                <MudCard Class="demo-form">
+                    <MudCardContent>
+                        <MudTextField Label="Author" @bind-Value="EditEBook.EAuthor" For="@(() => EditEBook.EAuthor)" />
+                        <MudTextField Label="Pages" @bind-Value="EditEBook.EPages" For="@(() => EditEBook.EPages)" />
+                        <MudTextField Label="BookName" @bind-Value="EditEBook.Name" For="@(() => EditEBook.Name)" />
+                        <MudTextField Label="Description" @bind-Value="EditEBook.Description" For="@(() => EditEBook.Description)" />
+                    </MudCardContent>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Info">Update EBook</MudButton>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Error" @onclick="Delete">Remove EBook</MudButton>
+                </MudCard>
+            </EditForm>
+            break;
+    }
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    public ProductBase? Model { get; set; }
+    public BookModel? Book { get; set; }
+    public MovieModel? Movie { get; set; }
+    public EBookModel? Ebook { get; set; }
+    public BookModel EditBook = new BookModel();
+    public EBookModel EditEBook = new EBookModel();
+    public MovieModel EditMovie = new MovieModel();
+
+    protected async override Task OnInitializedAsync()
+    {
+        Model = await ProductManager.GetProduct(Id);
+        if (Model != null)
+        {
+            switch (Model.ModelType)
+            {
+                case nameof(BookModel):
+                    Book = (BookModel)Model;
+                    break;
+                case nameof(MovieModel):
+                    Movie = (MovieModel)Model;
+                    break;
+                case nameof(EBookModel):
+                    Ebook = (EBookModel)Model;
+                    break;
+            }
+        }
+    }
+
+    async Task Update()
+    {
+        if (Model != null)
+        {
+            switch (Model.ModelType)
+            {
+                case nameof(BookModel):
+                    await BookManager.EditBook(EditBook, Id);
+                    NavigationManager.NavigateTo("/Librarian");
+                    break;
+                case nameof(MovieModel):
+                    await MovieManager.EditMovie(EditMovie, Id);
+                    NavigationManager.NavigateTo("/Librarian");
+                    break;
+                case nameof(EBookModel):
+                    await EBookManager.UpdateEBook(EditEBook, Id);
+                    NavigationManager.NavigateTo("/Librarian");
+                    break;
+            }
+        }
+    }
+    async Task Delete()
+    {
+        if (Model != null)
+        {
+            switch (Model.ModelType)
+            {
+                case nameof(BookModel):
+                    await BookManager.DeleteBook(Id);
+                    NavigationManager.NavigateTo("/Librarian");
+                    break;
+                case nameof(MovieModel):
+                    await MovieManager.DeleteMovie(Id);
+                    NavigationManager.NavigateTo("/Librarian");
+                    break;
+                case nameof(EBookModel):
+                    await EBookManager.DeleteEbook(Id);
+                    NavigationManager.NavigateTo("/Librarian");
+                    break;
+
+            }
+        }
+    }
+}

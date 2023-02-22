@@ -1,0 +1,132 @@
+﻿@page "/"
+@inject IAccountManager AccountManager
+@inject IBookManager BookManager
+@inject INewsManager NewsManager
+@inject IProductManager ProductManager
+@inject NavigationManager NavigationManager
+@using Microsoft.AspNetCore.Components.Authorization
+
+<AuthorizeView Roles="@($"{LibraryRoles.Admin}, {LibraryRoles.Librarian}")">
+    <Authorized>
+        <h3> Welcome to Biblioteket!</h3>
+        <h3>Latest News</h3>
+        <MudSimpleTable>
+            <thead>
+                <tr>
+                    <th>Posted By</th>
+                    <th>Posted On</th>
+                    <th>News</th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (NewsList != null)
+                {
+                    @foreach (var news in NewsList)
+                    {
+                        <tr>
+                            <td>@news.User?.PersonName</td>
+                            <td>@news.Created</td>
+                            <td>@news.News</td>
+                            <td><MudButton ButtonType=ButtonType.Button Variant="Variant.Filled" @onclick="(() => Delete(news.Id))" Class="demo-form-button">Remove</MudButton></td>
+                            <td><MudButton ButtonType=ButtonType.Button Variant="Variant.Filled" @onclick="(() => Edit(news.Id))" Class="demo-form-button">Edit</MudButton></td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </MudSimpleTable>
+        <br />
+    </Authorized>
+    <NotAuthorized>
+        <h3>Welcome to Biblioteket!</h3>
+        <h3>Latest News</h3>
+        <MudSimpleTable>
+            <thead>
+                <tr>
+                    <th>Posted By</th>
+                    <th>Posted On</th>
+                    <th>News</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (NewsList != null)
+                {
+                    @foreach (var news in NewsList)
+                    {
+                        <tr>
+                            <td>@news.User?.PersonName</td>
+                            <td>@news.Created</td>
+                            <td>@news.News</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </MudSimpleTable>
+        <br />
+    </NotAuthorized>
+</AuthorizeView>
+<br />
+<h3>Latest Products</h3>
+<MudSimpleTable>
+    <thead>
+        <tr>
+            <th>Product Name</th>
+            <th>Type</th>
+            <th>InStock</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (NewProducts != null)
+        {
+            @foreach (var prod in NewProducts)
+            {
+                <tr>
+                    <td>@prod.Name</td>
+                    <td>@prod.Type</td>
+                    <td>@prod.Count</td>
+                    <td><MudButton ButtonType=ButtonType.Button Variant="Variant.Filled" @onclick="(() => Product(prod.Id))">View</MudButton></td>
+                </tr>
+            }
+        }
+    </tbody>
+</MudSimpleTable>
+@code {
+    public NewsModel? News { get; set; }
+    public List<NewsModel>? NewsList { get; set; }
+    public List<ProductBase>? NewProducts { get; set; } = new();
+    private bool _updatePage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        NewsList = await NewsManager.GetNews();
+        NewProducts = await ProductManager.LatestsProducts();
+    }
+
+    protected override bool ShouldRender()
+    {
+        if (_updatePage)
+        {
+            _updatePage = false;
+            return true;
+        }
+        return base.ShouldRender();
+    }
+
+    private async Task Delete(int id)
+    {
+        await NewsManager.DeleteNews(id);
+        NewsList = await NewsManager.GetNews();
+        _updatePage = true;
+        StateHasChanged();
+    }
+    private async Task Edit(int id)
+    {
+        NavigationManager.NavigateTo($"EditNews/{id}");
+    }
+    private void Product(int id)
+    {
+        NavigationManager.NavigateTo($"product/{id}");
+    }
+}

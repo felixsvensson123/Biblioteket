@@ -1,0 +1,54 @@
+﻿@inject IJSRuntime JsRuntime
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavigationManager
+@using Microsoft.AspNetCore.Components.Authorization
+<MudDrawer @bind-Open="SideBarOpen" Elevation="1">
+    <MudDrawerHeader>
+        <MudAvatar Color="Color.Transparent" Size="Size.Large" Image="https://media.istockphoto.com/photos/librarian-picture-id184099731" />
+        <MudText Typo="Typo.h5" Color="Color.Primary" Style="margin-top:10px; margin-left:15px;">Code-Maze</MudText>
+    </MudDrawerHeader>
+    <MudNavMenu>
+        <AuthorizeView>
+            <NotAuthorized>
+                <MudNavLink Href="/Login" Icon="@Icons.Filled.Login">Login</MudNavLink>
+                <MudNavLink Href="/SignUp" Icon="@Icons.Filled.AppRegistration">SignUp</MudNavLink>
+            </NotAuthorized>
+            <Authorized>
+                <MudNavGroup Title="Library" Icon="@Icons.Filled.DashboardCustomize" Expanded="true">
+                    <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Filled.Home">Home</MudNavLink>
+                    <MudNavLink @onclick="Logout" Icon="@Icons.Filled.Logout">Logout</MudNavLink>
+                </MudNavGroup>
+            </Authorized>
+        </AuthorizeView>
+    </MudNavMenu>
+</MudDrawer>
+@code {
+    [Parameter]
+    public bool SideBarOpen { get; set; }
+}
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+    private async void Logout()
+    {
+        bool confimred = await JsRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to logout?");
+        if (confimred)
+        {
+            await LocalStorage.RemoveItemAsync("token");
+            await AuthStateProvider.GetAuthenticationStateAsync();
+            NavigationManager.NavigateTo("/");
+        }
+        else
+        {
+            NavigationManager.NavigateTo("/");
+        }
+    }
+}

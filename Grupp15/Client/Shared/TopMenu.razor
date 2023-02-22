@@ -1,0 +1,45 @@
+﻿@inject IJSRuntime JsRuntime
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavigationManager
+@inject IProductManager Productmanager
+@using Microsoft.AspNetCore.Components.Authorization
+<div id=SearchResult>
+<BlazoredTypeahead SearchMethod="@SearchProduct"
+                            TValue="ProductBase"
+                            TItem="ProductBase"
+                            Value="selectedProduct"
+                            ValueChanged="HandleSearch"
+                            ValueExpression="@(() => selectedProduct)"
+                            placeholder="Search for title or genre">
+    <SelectedTemplate>
+        @context.Name
+        
+    </SelectedTemplate>
+    <ResultTemplate>
+        @context.Name
+        <br />
+        @context.Type
+    </ResultTemplate>
+    <NotFoundTemplate>
+        No product found, try again.
+    </NotFoundTemplate>
+</BlazoredTypeahead>
+</div>
+@code {
+
+    private ProductBase selectedProduct;
+
+    private void HandleSearch(ProductBase Product)
+    {
+        if (Product == null) return;
+        selectedProduct = Product;
+        NavigationManager.NavigateTo($"product/{selectedProduct.Id}");
+    }
+
+    private async Task<IEnumerable<ProductBase>> SearchProduct(string searchText)
+    {
+        var response = await Productmanager.SearchProduct(searchText);
+        return response;
+    }
+}

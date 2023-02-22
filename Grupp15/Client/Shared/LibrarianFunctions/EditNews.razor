@@ -1,0 +1,41 @@
+﻿@page "/editnews/{Id:int}"
+@inject NavigationManager NavigationManager
+@inject INewsManager NewsManager
+<MudSimpleTable>
+    <thead>
+        <tr>
+            <th>Selected News</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>@News?.News</td>
+        </tr>
+    </tbody>
+</MudSimpleTable>
+<EditForm Model="NewsEdit" OnSubmit="Edit">
+    <MudCard Class="demo-form">
+        <MudCardContent>
+            <MudTextField Label="New Message" @bind-Value="NewsEdit.News" For="@(() => NewsEdit.News)" />
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Info" @onclick="Edit">Edit News</MudButton>
+        </MudCardActions>
+    </MudCard>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    public NewsModel NewsEdit = new NewsModel();
+    public NewsModel? News { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        News = await NewsManager.GetSpecificNews(Id);
+    }
+    async Task Edit()
+    {
+        await NewsManager.UpdateNews(NewsEdit.News, Id);
+        NavigationManager.NavigateTo("/");
+    }
+}

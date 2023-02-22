@@ -1,0 +1,76 @@
+﻿@page "/lectures"
+@inject ILectureManager LectureManager
+@inject NavigationManager NavigationManager
+@inject IDialogService DialogService
+
+<MudTable @ref="@Table" Items="@lectures" RowsPerPage="4" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info">
+    <HeaderContent>
+        <MudTh>Lecturers Name</MudTh>
+        <MudTh>Subject</MudTh>
+        <MudTh>Lenght in Minutes</MudTh>
+        <MudTh>Start Date</MudTh>
+        <MudTh>Max Seats</MudTh>
+        <MudTh>Seats Taken</MudTh>
+        <MudTh></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Lecturers Name">@context.LecturerName</MudTd>
+        <MudTd DataLabel="Subject">@context.Subject</MudTd>
+        <MudTd DataLabel="Lenght in Minutes">@context.EstimatedLengthMins</MudTd>
+        @if (context.StartDate > DateTime.Now)
+        {
+            <MudTd DataLabel="Start Date">@context.StartDate</MudTd>
+        }
+        else
+        {
+            <MudTd DataLabel="Start Date">Expired</MudTd>
+        }
+        <MudTd DataLabel="Max Seats">@context.MaxStudentCount</MudTd>
+        <MudTd DataLabel="Seats Taken">@context.AttendingCount</MudTd>
+        <MudTh>
+            @if (context.StartDate > DateTime.Now)
+            {
+                <MudButton ButtonType="ButtonType.Button" Variant="Variant.Outlined" Color="Color.Dark" @onclick="(() => LectureSignup(context.Id))">View</MudButton>
+            }
+            else
+            {
+                <MudButton ButtonType="ButtonType.Button" Variant="Variant.Outlined" Color="Color.Dark" Disabled="true">Not Available</MudButton>
+            }
+        </MudTh>
+    </RowTemplate>
+    <PagerContent>
+        <MudPagination SelectedChanged="PageChanged" Count="@((Table.GetFilteredItemsCount() + Table.RowsPerPage - 1) / Table.RowsPerPage)" Class="pa-4" />
+    </PagerContent>
+</MudTable>
+
+@code {
+    private MudTable<LectureModel>? Table;
+    public List<LectureModel>? lectures = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        lectures = await LectureManager.GetAll();
+    }
+
+    private void PageChanged(int i)
+    {
+        Table.NavigateTo(i - 1);
+    }
+
+    private async Task LectureSignup(int id)
+    {
+        var lecture = lectures!.Find(i => i.Id == id);
+
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+
+        var parameters = new DialogParameters();
+        parameters.Add("Lecture", lecture);
+
+        var result = await DialogService.Show<LectureDialog>(lecture!.Subject, parameters, options).Result;
+
+        if (!result.Cancelled)
+        {
+            await LectureManager.SignUp(lecture.Id);
+        }
+    }
+}

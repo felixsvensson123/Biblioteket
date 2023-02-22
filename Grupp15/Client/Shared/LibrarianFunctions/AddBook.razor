@@ -1,0 +1,82 @@
+﻿@inject IBookManager BookManager
+
+<InputFile OnChange=@LoadFile />
+
+@if (book != null)
+{
+    @if (posted == false)
+    {
+        <MudButton ButtonType="ButtonType.Button" @onclick="@PostFile"><MudIcon Icon="@Icons.Filled.UploadFile" Color="Color.Success" Title="Upload" /></MudButton>
+        <MudSimpleTable>
+            <thead>
+                <tr>
+                    <th>Book Name</th>
+                    <th>Book Author</th>
+                    <th>Number of Books</th>
+                    <th>Number of Pages</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var model in book)
+                {
+                    @if (model != null)
+                    {
+                        <tr>
+                            <td>@model.Name</td>
+                            <td>@model.Author</td>
+                            <td>@model.Count</td>
+                            <td>@model.Pages</td>
+                        </tr>
+
+                    }
+                    else
+                    {
+                        <p>null</p>
+                    }
+                }
+            </tbody>
+        </MudSimpleTable>
+    }
+    else
+    {
+        <h3>Books Posted</h3>
+    }
+
+}
+
+
+@code {
+    private List<BookModel>? book { get; set; }
+
+    private Stream? fileStream;
+
+    private string fileName = "";
+    private bool posted;
+
+    private async Task PostFile()
+    {
+        if (fileStream != null)
+        {
+            fileStream.Position = 0;
+
+            await BookManager.BulkAdd(fileStream, fileName);
+
+            posted = true;
+        }
+    }
+
+    private async Task LoadFile(InputFileChangeEventArgs e)
+    {
+        byte[] buffer = new byte[e.File.Size];
+
+        await e.File.OpenReadStream().ReadAsync(buffer);
+
+        fileStream = new MemoryStream(buffer);
+
+        fileName = e.File.Name;
+
+        book = CSVHelper.FromStream<BookModel>(fileStream)!;
+
+        posted = false;
+    }
+}

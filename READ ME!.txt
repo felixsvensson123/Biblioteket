@@ -1,0 +1,3 @@
+Kopierade detta repo då jag var ej ägaren över projektet och han hade satt det på private och
+jag hade ej tillgång till att nå honom. Jag har jobbat mycket med backenden och lite med
+frontenden

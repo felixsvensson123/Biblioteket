@@ -1,0 +1,59 @@
+﻿@page "/login"
+@using Blazored.LocalStorage
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IAccountManager AccountManager
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService LocalStorage
+@inject AuthenticationStateProvider AuthStateProvider
+@inject HttpClient Http
+@if (!Authcheck)
+{
+   <EditForm Model="user" OnValidSubmit="LoginUser">
+    <DataAnnotationsValidator />
+    <MudCard Class="demo-form">
+        <MudCardContent>
+            <MudTextField Label="Email" @bind-Value="user.Email" For="@(() => user.Email)" />
+            <MudTextField Label="Password" @bind-Value="user.Password" For="@(() => user.Password)" InputType="InputType.Password" />
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" @onclick="LoginUser" Class="demo-form-button">Login</MudButton>
+        </MudCardActions>
+    </MudCard>    
+    </EditForm>
+}
+else
+{
+<EditForm Model="user" OnValidSubmit="LoginUser">
+    <DataAnnotationsValidator />
+    <MudCard Class="demo-form">
+        <MudCardContent>
+            <MudTextField Label="Email" @bind-Value="user.Email" For="@(() => user.Email)" />
+            <MudTextField Label="Password" @bind-Value="user.Password" For="@(() => user.Password)" InputType="InputType.Password" />
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" @onclick="LoginUser" Class="demo-form-button">Login</MudButton>
+        </MudCardActions>
+    </MudCard>    
+</EditForm>
+<h3 style="color: red;">Email or password was wrong!</h3>
+}
+@code {
+    public LoginModel user = new LoginModel();
+    private bool Authcheck;
+    private async Task LoginUser()
+    {
+        string token = await AccountManager.LoginUser(user);
+        if (!string.IsNullOrEmpty(token))
+        {
+              Authcheck = false;
+              await LocalStorage.SetItemAsync("token", token);
+              await AuthStateProvider.GetAuthenticationStateAsync();
+              NavigationManager.NavigateTo("/");
+         }
+
+        else if (token == null)
+        { 
+            Authcheck = true; 
+        }
+    }
+}

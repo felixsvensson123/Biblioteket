@@ -1,0 +1,47 @@
+﻿@page "/loanedproducts"
+@inject IAccountManager AccountManager
+@inject IProductManager ProductManager
+@inject NavigationManager NavigationManager
+<MudTable Items="@Loaned" Sortable="true" Filter="new Func<BorrowingModel,bool>(FilterT)">
+	<ToolBarContent>
+		<MudText Typo="Typo.h6">Loaned Products</MudText>
+		<MudSpacer />
+		<MudTextField @bind-Value="_search" Placeholder="Search Person Name" Adornment="Adornment.Start" Immediate="true" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+	</ToolBarContent>
+	<HeaderContent>
+		<MudTh>Name</MudTh>
+		<MudTh>Date Borrowed</MudTh>
+		<MudTh>Last Return Date</MudTh>
+		<MudTh>Product Type</MudTh>
+		<MudTh>Loaned By</MudTh>
+		<MudTh></MudTh>
+	</HeaderContent>
+	<RowTemplate>
+         <MudTd DataLabel="Name">@context.Product?.Name</MudTd>
+        <MudTd DataLabel="Type">@context.BorrowingDate</MudTd>
+        <MudTd DataLabel="Count">@context.ReturnDate</MudTd>
+        <MudTd DataLabel="Count">@context.Product?.Type</MudTd>
+        <MudTd DataLabel="Count">@context.User?.PersonName</MudTd>
+	</RowTemplate>
+	<PagerContent>
+		<MudTablePager />
+	</PagerContent>
+</MudTable>
+@code {
+    public List<BorrowingModel>? Loaned = new();
+    private string _search = "";
+    protected override async Task OnInitializedAsync()
+    {
+        Loaned = await ProductManager.GetAllLoaned();
+    }
+    private bool FilterT(BorrowingModel loaned) => FilterThread(loaned, _search);
+
+	private bool FilterThread(BorrowingModel loaned, string _search)
+	{
+		if (string.IsNullOrWhiteSpace(_search))
+			return true;
+		if (loaned.User.PersonName.Contains(_search, StringComparison.OrdinalIgnoreCase))
+			return true;
+		return false;
+	}
+}

@@ -1,0 +1,31 @@
+﻿<MudDialog>
+    <DialogContent>
+        <MudContainer Style="max-height: 300px; overflow-y: scroll">
+            <MudText Style="white-space: pre-wrap;">@Lecture?.Description</MudText>
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <AuthorizeView>
+            <Authorized>
+                <MudButton Color="Color.Primary" OnClick="Submit">Sign up</MudButton>
+            </Authorized>
+            <NotAuthorized>
+                <MudTooltip Text="Please login to sign up" Color="Color.Warning" Placement="Placement.Bottom" Arrow="true">
+                    <MudButton Color="Color.Primary" OnClick="Submit" Disabled="true">Sign up</MudButton>
+                </MudTooltip>
+            </NotAuthorized>
+        </AuthorizeView>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    MudDialogInstance? MudDialog { get; set; }
+
+    [Parameter]
+    public LectureModel? Lecture { get; set; }
+
+    void Submit() => MudDialog?.Close(DialogResult.Ok(true));
+    void Cancel() => MudDialog?.Cancel();
+}

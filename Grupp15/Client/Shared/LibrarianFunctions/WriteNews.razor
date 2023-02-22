@@ -1,0 +1,25 @@
+﻿@inject INewsManager NewsManager
+@inject NavigationManager NavigationManger
+<AuthorizeView Roles="@($"{LibraryRoles.Admin}, {LibraryRoles.Librarian}")">
+    <Authorized>
+        <EditForm Model="postNews" OnValidSubmit="PostNews" Context="auth">
+            <DataAnnotationsValidator />
+            <MudCard Class="demo-form">
+                <MudCardContent>
+                    <MudTextField Label="Post News" HelperText="Write some news to post" @bind-Value="postNews.News" For="@(() => postNews.News)" InputType="InputType.Text" />
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="demo-form-button">Post News</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </EditForm>
+    </Authorized>
+</AuthorizeView>
+@code {
+    public NewsModel postNews = new NewsModel();
+    private async Task PostNews()
+    {
+        await NewsManager.PostNews(postNews.News);
+        postNews.News = "";
+    }
+}

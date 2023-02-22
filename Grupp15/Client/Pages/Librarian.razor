@@ -1,0 +1,85 @@
+﻿@page "/librarian"
+@inject IProductManager ProductManager
+@inject NavigationManager NavigationManager
+<AuthorizeView Roles="@($"{LibraryRoles.Admin}, {LibraryRoles.Librarian}")">
+    <Authorized>
+        <h3>Settings</h3>
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-3">
+            <MudTabPanel Text="Add Book">
+                <p>Book</p>
+                <AddBook></AddBook>
+            </MudTabPanel>
+            <MudTabPanel Text="Add Movie">
+                <p>Movie</p>
+                <AddMovie></AddMovie>
+            </MudTabPanel>
+            <MudTabPanel Text="Add EBook">
+                <p>Ebook</p>
+                <AddEbook></AddEbook>
+            </MudTabPanel>
+            <MudTabPanel Text="Write News">
+                <WriteNews></WriteNews>
+            </MudTabPanel>
+            <MudTabPanel Text="Add Lecture">
+                <LecturesAdd></LecturesAdd>
+            </MudTabPanel>
+            <MudTabPanel Text="View Lectures">
+                <LecturesView></LecturesView>
+            </MudTabPanel>
+        </MudTabs>
+        <br />
+        <br />
+    </Authorized>
+</AuthorizeView>
+<MudTable Items="@Products" Sortable="true" Filter="new Func<ProductBase,bool>(FilterT)">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Products</MudText>
+        <MudSpacer />
+        <MudTextField @bind-Value="_search" Placeholder="Search" Adornment="Adornment.Start" Immediate="true" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Name</MudTh>
+        <MudTh>Type</MudTh>
+        <MudTh>In Stock</MudTh>
+        <MudTh></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Name">@context.Name</MudTd>
+        <MudTd DataLabel="Type">@context.Type</MudTd>
+        <MudTd DataLabel="Count">@context.Count</MudTd>
+        <MudTd><MudButton ButtonType="ButtonType.Button" Variant="Variant.Outlined" Color="Color.Dark" @onclick="(() => Product(context.Id))">View</MudButton></MudTd>
+        <MudTd><MudButton ButtonType="ButtonType.Button" Variant="Variant.Outlined" Color="Color.Dark" @onclick="(() => Edit(context.Id))">Edit</MudButton></MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
+@code {
+    private string _search = "";
+    public List<ProductBase>? Products { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Products = await ProductManager.GetAllProducts();
+    }
+
+    private void Product(int id)
+    {
+        NavigationManager.NavigateTo($"product/{id}");
+    }
+
+    private void Edit(int id)
+    {
+        NavigationManager.NavigateTo($"EditProduct/{id}");
+    }
+    private bool FilterT(ProductBase product) => FilterThread(product, _search);
+
+    private bool FilterThread(ProductBase product, string _search)
+    {
+        if (string.IsNullOrWhiteSpace(_search))
+            return true;
+        if (product.Name.Contains(_search, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+}
